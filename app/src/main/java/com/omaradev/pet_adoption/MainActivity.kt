@@ -4,13 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
-import com.omaradev.pet_adoption.ui.home.HomeScreen
+import com.omaradev.pet_adoption.ui.NavigationComposeShared
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            HomeScreen(isSystemInDarkTheme())
+            NavigationComposeShared(isSystemInDarkTheme())
         }
     }
 }
