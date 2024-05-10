@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.omaradev.pet_adoption.R
 import com.omaradev.pet_adoption.ui.details.DetailsScreen
 import com.omaradev.pet_adoption.ui.home.HomeScreen
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable

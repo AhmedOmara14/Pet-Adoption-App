@@ -1,6 +1,10 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
+    id("kotlin-android")
+    id("kotlinx-serialization")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -38,6 +42,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -47,10 +52,44 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+
+    flavorDimensions("pets")
+    productFlavors {
+        create("staging") {
+            dimension = "pets"
+            buildConfigField(
+                "String",
+                "client_id",
+                "\"1bUt6n3LghG3teMlhHFj4phfdeZ8a4OoDUSwwaWfoHuvf5Lhmn\""
+            )
+            buildConfigField(
+                "String",
+                "client_secret",
+                "\"SSiKasQoJa8X49uyq7dHu5gUIZckJz0WcK0owi5o\""
+            )
+            buildConfigField(
+                "String",
+                "grant_type",
+                "\"client_credentials\""
+            )
+            buildConfigField(
+                "String",
+                "API_URL",
+                "\"v2/\""
+            )
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"https://api.petfinder.com/\""
+            )
+        }
+    }
+
 }
 
-dependencies {
 
+dependencies {
     implementation("androidx.core:core-ktx:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -68,6 +107,30 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    implementation("androidx.compose.ui:ui:1.7.0-alpha07")
-    implementation("androidx.compose.animation:animation:1.7.0-alpha07")
+    //Shared Element Transitions
+    implementation("androidx.compose.ui:ui:1.7.0-alpha08")
+    implementation("androidx.compose.animation:animation:1.7.0-alpha08")
+
+    //Coil
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // Koin for Android
+    implementation("io.insert-koin:koin-android:3.5.3")
+    implementation("io.insert-koin:koin-core:3.5.3")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.3")
+    implementation("io.insert-koin:koin-ktor:3.5.3")
+    implementation("io.insert-koin:koin-logger-slf4j:3.5.3")
+
+    //Ktor
+    implementation("io.ktor:ktor-client-core:2.3.10")
+    implementation("io.ktor:ktor-client-android:2.3.10")
+    implementation("io.ktor:ktor-client-serialization:2.3.10")
+    implementation("io.ktor:ktor-client-logging:2.3.10")
+
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.10")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.10")
+
+    //serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+
 }
