@@ -5,4 +5,5 @@ import io.ktor.client.statement.HttpResponse
 
 interface ApiService {
     suspend fun requestToken(requestTokenBody: RequestTokenBody): HttpResponse
+    suspend fun getAllAnimals(type: String, page: Int): HttpResponse
 }

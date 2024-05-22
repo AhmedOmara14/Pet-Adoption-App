@@ -133,4 +133,11 @@ dependencies {
     //serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
+    //coil
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+    //Paging 3
+    implementation("androidx.paging:paging-runtime-ktx:3.3.0")
+    implementation("androidx.paging:paging-compose:3.3.0")
+
 }

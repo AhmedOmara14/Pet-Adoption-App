@@ -58,11 +58,11 @@ fun NavigationComposeShared(systemInDarkTheme: Boolean) {
                 arguments = listOf(navArgument("Pet") { type = NavType.IntType })
             ) { backStackEntry ->
                 val petId = backStackEntry.arguments?.getInt("Pet")
-                val pet = pets[petId!!]
+                val pet = pets[1]
 
                 DetailsScreen(
                     systemInDarkTheme = isDarkTheme,
-                    petId = petId,
+                    petId = 1,
                     pet = pet,
                     navController = navController,
                     boundsTransform = boundsTransform,

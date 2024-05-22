@@ -1,4 +1,4 @@
-package com.omaradev.pet_adoption.main.viewmodel
+package com.omaradev.pet_adoption.ui.main.viewmodel
 
 import android.content.Context
 import android.preference.PreferenceManager
@@ -22,8 +22,6 @@ val mainViewModelModule = module {
 class MainViewModel(
     val repository: Repository
 ) : ViewModel() {
-
-    var requestTokenResponse = mutableStateOf<RequestTokenResponse?>(null)
 
     init {
         requestToken(RequestTokenBody().apply {
