@@ -50,7 +50,6 @@ import com.omaradev.pet_adoption.ui.theme.colorWhite
 fun DetailsScreen(
     systemInDarkTheme: Boolean,
     petId: Int,
-    pet: Pet,
     navController: NavHostController,
     boundsTransform: (androidx.compose.ui.geometry.Rect, androidx.compose.ui.geometry.Rect) -> TweenSpec<androidx.compose.ui.geometry.Rect>,
     animatedContentScope: AnimatedContentScope,

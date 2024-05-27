@@ -56,7 +56,6 @@ fun NearByResultListItem(
     sharedTransitionScope: SharedTransitionScope,
     isClick: () -> Unit
 ) {
-    if (!animal.photo.isNullOrEmpty())
         sharedTransitionScope.apply {
             Row(
                 modifier = Modifier

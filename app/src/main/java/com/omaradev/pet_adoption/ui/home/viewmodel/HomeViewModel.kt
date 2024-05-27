@@ -34,7 +34,10 @@ class HomeViewModel(
     val animalsItems: MutableStateFlow<RemoteRequestStatus<AllAnimals>> get() = _animalsItems
 
 
-     val animals: Flow<PagingData<Animal>> = repository.getAllAnimals(type = "dog", page = 1).cachedIn(viewModelScope)
+    // PagingData flow for animals, cached in viewModelScope
+
+    val animals: Flow<PagingData<Animal>> =
+        repository.getAllAnimals(type = "dog", page = 1).cachedIn(viewModelScope)
 
 
 }

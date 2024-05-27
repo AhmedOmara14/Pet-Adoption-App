@@ -36,7 +36,6 @@ class RepositoryImpl(
         ).flow
     }
 
-
     private suspend fun <T> executeRequest(
         requestTokenBody: RequestTokenBody,
         responseMapper: (String) -> T
