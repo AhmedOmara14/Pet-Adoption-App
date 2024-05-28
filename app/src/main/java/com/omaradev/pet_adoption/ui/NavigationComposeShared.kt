@@ -44,7 +44,6 @@ fun NavigationComposeShared(systemInDarkTheme: Boolean) {
             composable("home") {
                 HomeScreen(
                     isDarkTheme,
-                    pets = pets,
                     navController = navController,
                     boundsTransform = boundsTransform,
                     animatedContentScope = this@composable,
@@ -54,10 +53,10 @@ fun NavigationComposeShared(systemInDarkTheme: Boolean) {
                 }
             }
             composable(
-                "details/{Pet}",
-                arguments = listOf(navArgument("Pet") { type = NavType.IntType })
+                "details/{PetId}",
+                arguments = listOf(navArgument("PetId") { type = NavType.IntType })
             ) { backStackEntry ->
-                val petId = backStackEntry.arguments?.getInt("Pet")
+                val petId = backStackEntry.arguments?.getInt("PetId")
 
                 petId?.let {
                     DetailsScreen(

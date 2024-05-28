@@ -30,6 +30,12 @@ class ApiServiceImpl(
         inputs["page"] = page
         inputs["limit"] = MAX_PER_PAGE
 
-        return getRequest("animals", inputs, client, getRequestToken() ?: "")
+        return getRequest("animals", inputs, client, getRequestToken() ?: "",false)
+    }
+
+    override suspend fun getDetailsOfAnimal(animalId: Int): HttpResponse {
+        val inputs = HashMap<String, Any>()
+        inputs["id"] = animalId
+        return getRequest("animals", inputs, client, getRequestToken() ?: "", isPath = true)
     }
 }

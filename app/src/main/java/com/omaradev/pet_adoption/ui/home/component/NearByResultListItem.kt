@@ -54,14 +54,14 @@ fun NearByResultListItem(
     boundsTransform: (Rect, Rect) -> TweenSpec<Rect>,
     animatedContentScope: AnimatedContentScope,
     sharedTransitionScope: SharedTransitionScope,
-    isClick: () -> Unit
+    isClick: (id:Int) -> Unit
 ) {
         sharedTransitionScope.apply {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(6.dp)
-                    .clickable { isClick() }
+                    .clickable { animal.id?.let { isClick(it) } }
             ) {
                 Box(
                     modifier = Modifier

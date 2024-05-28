@@ -12,4 +12,9 @@ interface Repository {
     fun getAllAnimals(
         type: String, page: Int
     ): Flow<PagingData<Animal>>
+
+    fun getAnimalDetails(
+        animalId: Int
+    ): Flow<RemoteRequestStatus<Animal>>
+
 }

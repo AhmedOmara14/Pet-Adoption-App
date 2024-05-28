@@ -22,16 +22,6 @@ class AnimalNetwork {
     var published_at: String? = null
     var tags: List<String>? = null
     var type: String? = null
-
-    var _links: Links? = null
-    var environment: Environment? = null
-    var species: String? = null
-    var videos: List<Video>? = null
-    var organization_id: String? = null
-    var organization_animal_id: String? = null
-    var primary_photo_cropped: PhotoNetwork? = null
-    var url: String? = null
-    var status_changed_at: String? = null
 }
 
 fun AnimalNetwork.toAnimal(): Animal {

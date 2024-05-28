@@ -4,6 +4,7 @@ import android.app.Application
 import com.omaradev.pet_adoption.data.di.ApiServiceModule
 import com.omaradev.pet_adoption.data.di.NetworkModule
 import com.omaradev.pet_adoption.data.di.RepositoryModule
+import com.omaradev.pet_adoption.ui.details.viewmodel.detailsViewModelModule
 import com.omaradev.pet_adoption.ui.home.viewmodel.homeViewModelModule
 import com.omaradev.pet_adoption.ui.main.viewmodel.mainViewModelModule
 import org.koin.android.ext.koin.androidContext
@@ -31,7 +32,8 @@ class AppBase : Application() {
                 RepositoryModule.RepositoryModule,
                 NetworkModule.NetworkModule,
                 mainViewModelModule,
-                homeViewModelModule
+                homeViewModelModule,
+                detailsViewModelModule
             )
         }
     }

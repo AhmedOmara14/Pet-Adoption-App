@@ -1,5 +1,6 @@
 package com.omaradev.pet_adoption.ui.details
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -21,12 +22,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -37,12 +44,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.omaradev.pet_adoption.R
+import com.omaradev.pet_adoption.domain.repository.RemoteRequestStatus
 import com.omaradev.pet_adoption.ui.Pet
+import com.omaradev.pet_adoption.ui.details.viewmodel.DetailsViewModel
+import com.omaradev.pet_adoption.ui.home.viewmodel.HomeViewModel
 import com.omaradev.pet_adoption.ui.theme.colorBlue
 import com.omaradev.pet_adoption.ui.theme.colorBlueLight
 import com.omaradev.pet_adoption.ui.theme.colorGrayLight2_X
 import com.omaradev.pet_adoption.ui.theme.colorWhite
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
@@ -55,6 +68,30 @@ fun DetailsScreen(
     animatedContentScope: AnimatedContentScope,
     sharedTransitionScope: SharedTransitionScope
 ) {
+    val viewModel: DetailsViewModel = koinViewModel()
+
+    var isLoadingItem by remember {
+        mutableStateOf(false)
+    }
+
+    viewModel.getAnimalDetails(petId)
+
+    val ItemState = viewModel.animalItem.collectAsState()
+
+    when (val state = ItemState.value) {
+        is RemoteRequestStatus.ToggleLoading -> isLoadingItem = state.showLoading
+        is RemoteRequestStatus.OnSuccessRequest -> {
+            isLoadingItem = false
+            viewModel.animal = state.responseBody
+        }
+
+        is RemoteRequestStatus.OnFailedRequest -> {
+            val exception = (state as RemoteRequestStatus.OnFailedRequest<*>).errorMessage
+            Log.d("TAG", "DetailsScreen: $exception")
+        }
+
+        else -> {}
+    }
     sharedTransitionScope.apply {
         Column(
             modifier = Modifier
@@ -97,13 +134,25 @@ fun DetailsScreen(
                     .padding(16.dp)
                     .clip(RoundedCornerShape(16.dp))
             ) {
-                Image(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    painter = painterResource(id = R.drawable.pet),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop
-                )
+                if (!viewModel.animal?.photo.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(viewModel.animal?.photo?.get(0)?.full)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = painterResource(id = R.drawable.pet),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                    )
+                } else {
+                    Image(
+                        modifier = Modifier.fillMaxSize(),
+                        painter = painterResource(id = R.drawable.pet),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
 
             Column(
@@ -120,7 +169,7 @@ fun DetailsScreen(
                     horizontalArrangement = Arrangement.Absolute.SpaceBetween
                 ) {
                     Text(
-                        text = "######", style = TextStyle(
+                        text = "${viewModel.animal?.name}", style = TextStyle(
                             fontFamily = FontFamily(Font(R.font.cairobold)),
                             fontSize = 18.sp,
                             color = (if (systemInDarkTheme) colorWhite else colorBlue)
@@ -129,7 +178,7 @@ fun DetailsScreen(
                     )
 
                     Text(
-                        text = "Male",
+                        text = "${viewModel.animal?.status}",
                         style = TextStyle(
                             fontFamily = FontFamily(Font(R.font.cairolight)),
                             fontSize = 12.sp,
@@ -146,7 +195,7 @@ fun DetailsScreen(
 
 
                 Text(
-                    text = "#########",
+                    text = "${viewModel.animal?.description}",
                     style = TextStyle(
                         fontFamily = FontFamily(Font(R.font.cairosemibold)),
                         fontSize = 16.sp,
@@ -171,7 +220,7 @@ fun DetailsScreen(
                         )
 
                         Text(
-                            text = "######",
+                            text = "${viewModel.animal?.contact?.address?.address1}",
                             modifier = Modifier
                                 .padding(start = 4.dp)
                                 .align(Alignment.CenterVertically),
@@ -184,7 +233,7 @@ fun DetailsScreen(
                         )
                     }
                     Text(
-                        text = "#########",
+                        text = "${viewModel.animal?.distance}",
                         modifier = Modifier.padding(start = 4.dp, end = 4.dp),
                         style = TextStyle(
                             fontFamily = FontFamily(Font(R.font.cairosemibold)),
@@ -207,7 +256,7 @@ fun DetailsScreen(
                 )
 
                 Text(
-                    text = "########################################################################################################################################################################",
+                    text = "${viewModel.animal?.description}",
                     modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp),
                     style = TextStyle(
                         fontFamily = FontFamily(Font(R.font.cairoregular)),
@@ -243,7 +292,7 @@ fun DetailsScreen(
                         verticalArrangement = Arrangement.SpaceAround
                     ) {
                         Text(
-                            text = "1.4 yrs",
+                            text = "${viewModel.animal?.age} yrs",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 16.dp),
@@ -282,7 +331,7 @@ fun DetailsScreen(
                         verticalArrangement = Arrangement.SpaceAround
                     ) {
                         Text(
-                            text = "Brown",
+                            text = "${viewModel.animal?.colors?.primary}",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 16.dp),
