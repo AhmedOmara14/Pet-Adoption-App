@@ -22,10 +22,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,13 +48,13 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.omaradev.pet_adoption.R
 import com.omaradev.pet_adoption.domain.repository.RemoteRequestStatus
-import com.omaradev.pet_adoption.ui.Pet
 import com.omaradev.pet_adoption.ui.details.viewmodel.DetailsViewModel
-import com.omaradev.pet_adoption.ui.home.viewmodel.HomeViewModel
+import com.omaradev.pet_adoption.ui.details.viewmodel.ShimmerDetailsScreen
 import com.omaradev.pet_adoption.ui.theme.colorBlue
 import com.omaradev.pet_adoption.ui.theme.colorBlueLight
 import com.omaradev.pet_adoption.ui.theme.colorGrayLight2_X
 import com.omaradev.pet_adoption.ui.theme.colorWhite
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -71,27 +71,30 @@ fun DetailsScreen(
     val viewModel: DetailsViewModel = koinViewModel()
 
     var isLoadingItem by remember {
-        mutableStateOf(false)
+        mutableStateOf(true)
     }
 
-    viewModel.getAnimalDetails(petId)
+    LaunchedEffect(petId) {
+        viewModel.getAnimalDetails(petId).collectLatest { state ->
+            when (state) {
+                is RemoteRequestStatus.ToggleLoading -> isLoadingItem = state.showLoading
+                is RemoteRequestStatus.OnSuccessRequest -> {
+                    isLoadingItem = false
+                    viewModel.animal = state.responseBody
+                }
 
-    val ItemState = viewModel.animalItem.collectAsState()
 
-    when (val state = ItemState.value) {
-        is RemoteRequestStatus.ToggleLoading -> isLoadingItem = state.showLoading
-        is RemoteRequestStatus.OnSuccessRequest -> {
-            isLoadingItem = false
-            viewModel.animal = state.responseBody
+                is RemoteRequestStatus.OnFailedRequest -> {
+                    val exception = (state as RemoteRequestStatus.OnFailedRequest<*>).errorMessage
+                    Log.d("TAG", "DetailsScreen: $exception")
+                }
+
+                else -> {}
+            }
+
         }
-
-        is RemoteRequestStatus.OnFailedRequest -> {
-            val exception = (state as RemoteRequestStatus.OnFailedRequest<*>).errorMessage
-            Log.d("TAG", "DetailsScreen: $exception")
-        }
-
-        else -> {}
     }
+
     sharedTransitionScope.apply {
         Column(
             modifier = Modifier
@@ -105,15 +108,14 @@ fun DetailsScreen(
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_arrow_back),
+                Image(painter = painterResource(id = R.drawable.ic_arrow_back),
                     contentDescription = "Back Icon",
                     colorFilter = if (systemInDarkTheme) ColorFilter.tint(Color.White) else ColorFilter.tint(
                         Color.Black
-                    ), modifier = Modifier.clickable {
+                    ),
+                    modifier = Modifier.clickable {
                         navController.navigateUp()
-                    }
-                )
+                    })
                 Image(
                     painter = painterResource(id = R.drawable.ic_favorite),
                     contentDescription = "favorite Icon",
@@ -123,283 +125,287 @@ fun DetailsScreen(
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .sharedElement(
-                        rememberSharedContentState(key = "image-$petId"),
-                        animatedVisibilityScope = animatedContentScope,
-                        boundsTransform = boundsTransform,
-                    )
-                    .height(320.dp)
-                    .padding(16.dp)
-                    .clip(RoundedCornerShape(16.dp))
-            ) {
-                if (!viewModel.animal?.photo.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(viewModel.animal?.photo?.get(0)?.full)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = painterResource(id = R.drawable.pet),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(RoundedCornerShape(16.dp))
-                    )
-                } else {
-                    Image(
-                        modifier = Modifier.fillMaxSize(),
-                        painter = painterResource(id = R.drawable.pet),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier.sharedElement(
-                    rememberSharedContentState(key = "details-$petId"),
-                    animatedVisibilityScope = animatedContentScope,
-                    boundsTransform = boundsTransform,
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                    horizontalArrangement = Arrangement.Absolute.SpaceBetween
-                ) {
-                    Text(
-                        text = "${viewModel.animal?.name}", style = TextStyle(
-                            fontFamily = FontFamily(Font(R.font.cairobold)),
-                            fontSize = 18.sp,
-                            color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                        ), maxLines = 1, overflow = TextOverflow.Ellipsis
-
-                    )
-
-                    Text(
-                        text = "${viewModel.animal?.status}",
-                        style = TextStyle(
-                            fontFamily = FontFamily(Font(R.font.cairolight)),
-                            fontSize = 12.sp,
-                            color = colorBlueLight
-                        ),
+            if (isLoadingItem)
+                ShimmerDetailsScreen(systemInDarkTheme = systemInDarkTheme)
+             else
+                Column {
+                    Box(
                         modifier = Modifier
-                            .background(
-                                colorGrayLight2_X, RoundedCornerShape(16.dp)
+                            .sharedElement(
+                                rememberSharedContentState(key = "image-$petId"),
+                                animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = boundsTransform,
                             )
-                            .padding(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 2.dp),
-                        textAlign = TextAlign.End
-                    )
-                }
+                            .height(320.dp)
+                            .padding(16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                    ) {
+                        if (!viewModel.animal?.photo.isNullOrEmpty()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(viewModel.animal?.photo?.get(0)?.full).crossfade(true)
+                                    .build(),
+                                placeholder = painterResource(id = R.drawable.pet),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                            )
+                        } else {
+                            Image(
+                                modifier = Modifier.fillMaxSize(),
+                                painter = painterResource(id = R.drawable.pet),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
 
-
-                Text(
-                    text = "${viewModel.animal?.description}",
-                    style = TextStyle(
-                        fontFamily = FontFamily(Font(R.font.cairosemibold)),
-                        fontSize = 16.sp,
-                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                    ),
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 6.dp, start = 16.dp, end = 16.dp)
-                )
-
-                Row(
-                    modifier = Modifier
-                        .padding(top = 6.dp, start = 16.dp, end = 16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Absolute.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_location_pin),
-                            contentDescription = "Location Pin",
-                            Modifier.size(15.dp)
+                    Column(
+                        modifier = Modifier.sharedElement(
+                            rememberSharedContentState(key = "details-$petId"),
+                            animatedVisibilityScope = animatedContentScope,
+                            boundsTransform = boundsTransform,
                         )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                            horizontalArrangement = Arrangement.Absolute.SpaceBetween
+                        ) {
+                            Text(
+                                text = (viewModel.animal?.name)?:"No Name", style = TextStyle(
+                                    fontFamily = FontFamily(Font(R.font.cairobold)),
+                                    fontSize = 18.sp,
+                                    color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                ), maxLines = 1, overflow = TextOverflow.Ellipsis
+
+                            )
+
+                            Text(
+                                text = (viewModel.animal?.status)?:"No Status",
+                                style = TextStyle(
+                                    fontFamily = FontFamily(Font(R.font.cairolight)),
+                                    fontSize = 12.sp,
+                                    color = colorBlueLight
+                                ),
+                                modifier = Modifier
+                                    .background(
+                                        colorGrayLight2_X, RoundedCornerShape(16.dp)
+                                    )
+                                    .padding(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 2.dp),
+                                textAlign = TextAlign.End
+                            )
+                        }
+
 
                         Text(
-                            text = "${viewModel.animal?.contact?.address?.address1}",
-                            modifier = Modifier
-                                .padding(start = 4.dp)
-                                .align(Alignment.CenterVertically),
+                            text = (viewModel.animal?.description)?:"No Description",
                             style = TextStyle(
                                 fontFamily = FontFamily(Font(R.font.cairosemibold)),
-                                fontSize = 12.sp,
+                                fontSize = 16.sp,
+                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                            ),
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 6.dp, start = 16.dp, end = 16.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 6.dp, start = 16.dp, end = 16.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Absolute.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_location_pin),
+                                    contentDescription = "Location Pin",
+                                    Modifier.size(15.dp)
+                                )
+
+                                Text(
+                                    text = (viewModel.animal?.contact?.address?.city)?:"No Address",
+                                    modifier = Modifier
+                                        .padding(start = 4.dp)
+                                        .align(Alignment.CenterVertically),
+                                    style = TextStyle(
+                                        fontFamily = FontFamily(Font(R.font.cairosemibold)),
+                                        fontSize = 12.sp,
+                                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                    ),
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            Text(
+                                text = "${viewModel.animal?.distance}",
+                                modifier = Modifier.padding(start = 4.dp, end = 4.dp),
+                                style = TextStyle(
+                                    fontFamily = FontFamily(Font(R.font.cairosemibold)),
+                                    fontSize = 12.sp,
+                                    color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                ),
+                                textAlign = TextAlign.End
+                            )
+                        }
+
+                        Text(
+                            text = "About me",
+                            modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+                            style = TextStyle(
+                                fontFamily = FontFamily(Font(R.font.cairobold)),
+                                fontSize = 18.sp,
                                 color = (if (systemInDarkTheme) colorWhite else colorBlue)
                             ),
                             overflow = TextOverflow.Ellipsis
                         )
+
+                        Text(
+                            text = (viewModel.animal?.description)?:"No Description",
+                            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp),
+                            style = TextStyle(
+                                fontFamily = FontFamily(Font(R.font.cairoregular)),
+                                fontSize = 16.sp,
+                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                            ),
+                        )
+
+                        Text(
+                            text = "Quick Info",
+                            modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+                            style = TextStyle(
+                                fontFamily = FontFamily(Font(R.font.cairobold)),
+                                fontSize = 18.sp,
+                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                            ),
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(end = 8.dp, start = 16.dp)
+                                    .background(
+                                        colorGrayLight2_X, RoundedCornerShape(16.dp)
+                                    )
+                                    .weight(1f)
+                                    .padding(8.dp)
+                                    .align(alignment = Alignment.CenterVertically),
+                                verticalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Text(
+                                    text = "${viewModel.animal?.age} yrs",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 16.dp),
+                                    style = TextStyle(
+                                        fontFamily = FontFamily(Font(R.font.cairobold)),
+                                        fontSize = 14.sp,
+                                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "Age",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    style = TextStyle(
+                                        fontFamily = FontFamily(Font(R.font.cairobold)),
+                                        fontSize = 10.sp,
+                                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(end = 8.dp, start = 16.dp)
+                                    .background(
+                                        colorGrayLight2_X, RoundedCornerShape(16.dp)
+                                    )
+                                    .weight(1f)
+                                    .padding(8.dp)
+                                    .align(alignment = Alignment.CenterVertically),
+                                verticalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Text(
+                                    text = "${viewModel.animal?.colors?.primary}",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 16.dp),
+                                    style = TextStyle(
+                                        fontFamily = FontFamily(Font(R.font.cairobold)),
+                                        fontSize = 14.sp,
+                                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "Color",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    style = TextStyle(
+                                        fontFamily = FontFamily(Font(R.font.cairobold)),
+                                        fontSize = 10.sp,
+                                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(end = 8.dp, start = 16.dp)
+                                    .background(
+                                        colorGrayLight2_X, RoundedCornerShape(16.dp)
+                                    )
+                                    .weight(1f)
+                                    .padding(8.dp)
+                                    .align(alignment = Alignment.CenterVertically),
+                                verticalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Text(
+                                    text = "14 Kg",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 16.dp),
+                                    style = TextStyle(
+                                        fontFamily = FontFamily(Font(R.font.cairobold)),
+                                        fontSize = 14.sp,
+                                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "Weight",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    style = TextStyle(
+                                        fontFamily = FontFamily(Font(R.font.cairobold)),
+                                        fontSize = 10.sp,
+                                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                        }
+
                     }
-                    Text(
-                        text = "${viewModel.animal?.distance}",
-                        modifier = Modifier.padding(start = 4.dp, end = 4.dp),
-                        style = TextStyle(
-                            fontFamily = FontFamily(Font(R.font.cairosemibold)),
-                            fontSize = 12.sp,
-                            color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                        ),
-                        textAlign = TextAlign.End
-                    )
                 }
-
-                Text(
-                    text = "About me",
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp),
-                    style = TextStyle(
-                        fontFamily = FontFamily(Font(R.font.cairobold)),
-                        fontSize = 18.sp,
-                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                    ),
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Text(
-                    text = "${viewModel.animal?.description}",
-                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp),
-                    style = TextStyle(
-                        fontFamily = FontFamily(Font(R.font.cairoregular)),
-                        fontSize = 16.sp,
-                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                    ),
-                )
-
-                Text(
-                    text = "Quick Info",
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp),
-                    style = TextStyle(
-                        fontFamily = FontFamily(Font(R.font.cairobold)),
-                        fontSize = 18.sp,
-                        color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                    ),
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(end = 8.dp, start = 16.dp)
-                            .background(
-                                colorGrayLight2_X, RoundedCornerShape(16.dp)
-                            )
-                            .weight(1f)
-                            .padding(8.dp)
-                            .align(alignment = Alignment.CenterVertically),
-                        verticalArrangement = Arrangement.SpaceAround
-                    ) {
-                        Text(
-                            text = "${viewModel.animal?.age} yrs",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            style = TextStyle(
-                                fontFamily = FontFamily(Font(R.font.cairobold)),
-                                fontSize = 14.sp,
-                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                            ),
-                            textAlign = TextAlign.Center,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "Age",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            style = TextStyle(
-                                fontFamily = FontFamily(Font(R.font.cairobold)),
-                                fontSize = 10.sp,
-                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                            ),
-                            textAlign = TextAlign.Center,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Column(
-                        modifier = Modifier
-                            .padding(end = 8.dp, start = 16.dp)
-                            .background(
-                                colorGrayLight2_X, RoundedCornerShape(16.dp)
-                            )
-                            .weight(1f)
-                            .padding(8.dp)
-                            .align(alignment = Alignment.CenterVertically),
-                        verticalArrangement = Arrangement.SpaceAround
-                    ) {
-                        Text(
-                            text = "${viewModel.animal?.colors?.primary}",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            style = TextStyle(
-                                fontFamily = FontFamily(Font(R.font.cairobold)),
-                                fontSize = 14.sp,
-                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                            ),
-                            textAlign = TextAlign.Center,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "Color",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            style = TextStyle(
-                                fontFamily = FontFamily(Font(R.font.cairobold)),
-                                fontSize = 10.sp,
-                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                            ),
-                            textAlign = TextAlign.Center,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Column(
-                        modifier = Modifier
-                            .padding(end = 8.dp, start = 16.dp)
-                            .background(
-                                colorGrayLight2_X, RoundedCornerShape(16.dp)
-                            )
-                            .weight(1f)
-                            .padding(8.dp)
-                            .align(alignment = Alignment.CenterVertically),
-                        verticalArrangement = Arrangement.SpaceAround
-                    ) {
-                        Text(
-                            text = "14 Kg",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            style = TextStyle(
-                                fontFamily = FontFamily(Font(R.font.cairobold)),
-                                fontSize = 14.sp,
-                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                            ),
-                            textAlign = TextAlign.Center,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "Weight",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            style = TextStyle(
-                                fontFamily = FontFamily(Font(R.font.cairobold)),
-                                fontSize = 10.sp,
-                                color = (if (systemInDarkTheme) colorWhite else colorBlue)
-                            ),
-                            textAlign = TextAlign.Center,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                }
-
-            }
 
         }
     }

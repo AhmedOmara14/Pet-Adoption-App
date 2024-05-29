@@ -1,6 +1,7 @@
 package com.omaradev.pet_adoption.ui.home.component
 
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -61,7 +62,9 @@ fun NearByResultListItem(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(6.dp)
-                    .clickable { animal.id?.let { isClick(it) } }
+                    .clickable {
+                        animal.id?.let { isClick(it) }
+                    }
             ) {
                 Box(
                     modifier = Modifier
@@ -83,7 +86,9 @@ fun NearByResultListItem(
                             placeholder = painterResource(id = R.drawable.pet),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .fillMaxWidth()
                         )
                     } else {
                         Image(

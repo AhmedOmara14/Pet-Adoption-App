@@ -22,19 +22,11 @@ class DetailsViewModel(
     private val repository: Repository
 ) : ViewModel() {
 
-    private var _animalItem =
-        MutableStateFlow<RemoteRequestStatus<Animal>>(
-            RemoteRequestStatus.ToggleLoading(false)
-        )
-    val animalItem: MutableStateFlow<RemoteRequestStatus<Animal>> get() = _animalItem
-
     var animal: Animal? = null
 
-    fun getAnimalDetails(animalId: Int) = viewModelScope.launch {
-        repository.getAnimalDetails(animalId).collectLatest {
-            _animalItem.value = it
-        }
-    }
+    fun getAnimalDetails(animalId: Int) =
+        repository.getAnimalDetails(animalId)
+
 
 
 }
