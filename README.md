@@ -26,9 +26,7 @@ Welcome to the Pet Adoption App! This application is built using Jetpack Compose
 3. **Build and run the project on an Android device or emulator.**
 
 ## Demo
-
-![Pet Adoption App Demo](https://github.com/AhmedOmara14/Pet-Adoption-App/raw/master/Screen_recording_20240529_152450.mp4)
-
+https://github.com/AhmedOmara14/Pet-Adoption-App/assets/60369343/51be8c79-59b2-4a7a-9446-04724e760b92
 
 ## Contributing
 
