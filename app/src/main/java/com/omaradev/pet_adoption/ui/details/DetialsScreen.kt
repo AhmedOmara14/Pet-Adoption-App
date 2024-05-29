@@ -128,7 +128,7 @@ fun DetailsScreen(
             if (isLoadingItem)
                 ShimmerDetailsScreen(systemInDarkTheme = systemInDarkTheme)
              else
-                Column {
+                Column(Modifier.fillMaxWidth()) {
                     Box(
                         modifier = Modifier
                             .sharedElement(
@@ -137,8 +137,12 @@ fun DetailsScreen(
                                 boundsTransform = boundsTransform,
                             )
                             .height(320.dp)
+                            .fillMaxWidth()
                             .padding(16.dp)
                             .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                colorGrayLight2_X, RoundedCornerShape(16.dp)
+                            )
                     ) {
                         if (!viewModel.animal?.photo.isNullOrEmpty()) {
                             AsyncImage(
@@ -148,14 +152,7 @@ fun DetailsScreen(
                                 placeholder = painterResource(id = R.drawable.pet),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier.clip(RoundedCornerShape(16.dp))
-                            )
-                        } else {
-                            Image(
-                                modifier = Modifier.fillMaxSize(),
-                                painter = painterResource(id = R.drawable.pet),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop
+                                modifier = Modifier.clip(RoundedCornerShape(16.dp)).fillMaxWidth()
                             )
                         }
                     }

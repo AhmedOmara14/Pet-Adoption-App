@@ -23,18 +23,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun NavigationComposeShared(systemInDarkTheme: Boolean) {
     SharedTransitionLayout {
-        val pets = remember {
-            listOf(
-                Pet("Pet1", R.drawable.pet),
-                Pet("Pet2", R.drawable.pet),
-                Pet("Pet3", R.drawable.pet),
-                Pet("Pet4", R.drawable.pet)
-            )
-        }
-
         val boundsTransform =
             { _: Rect, _: Rect ->
-                tween<Rect>(1400)
+                tween<Rect>(500)
             }
 
         var isDarkTheme by remember { mutableStateOf(systemInDarkTheme) }
@@ -73,6 +64,3 @@ fun NavigationComposeShared(systemInDarkTheme: Boolean) {
         }
     }
 }
-
-
-data class Pet(var name: String, var image: Int)

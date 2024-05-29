@@ -1,5 +1,8 @@
 package com.omaradev.pet_adoption.data.di
+import android.preference.PreferenceManager
 import android.util.Log
+import com.omaradev.pet_adoption.BuildConfig
+import com.omaradev.pet_adoption.ui.main.AppBase
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -7,14 +10,19 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.http.ContentType
+import io.ktor.client.request.bearerAuth
 import io.ktor.http.headers
-import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 object NetworkModule {
+    private fun getRequestToken(): String? {
+        val context = AppBase.appContext
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        return prefs.getString("token", null)
+    }
+
     val NetworkModule = module {
         single<HttpClient> { provideKtorClient() }
     }
@@ -37,13 +45,12 @@ object NetworkModule {
                     isLenient = true
 
                 })
-                headersOf("content-type", "application/json")
-
             }
             defaultRequest {
                 headers {
-                    append("content-type", "application/json") // Ensure Content-Type header is set
+                    append("content-type", "application/json")
                 }
+                getRequestToken()?.let { bearerAuth(it) }
             }
         }
     }

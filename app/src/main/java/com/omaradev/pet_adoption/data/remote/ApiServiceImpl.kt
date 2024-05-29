@@ -13,14 +13,6 @@ class ApiServiceImpl(
     companion object {
         const val MAX_PER_PAGE = 10
     }
-
-    private fun getRequestToken(): String? {
-        val context = AppBase.appContext
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        return prefs.getString("token", null)
-    }
-
-
     override suspend fun requestToken(requestTokenBody: RequestTokenBody): HttpResponse =
         postRequest("oauth2/token", requestTokenBody, client)
 
@@ -30,12 +22,12 @@ class ApiServiceImpl(
         inputs["page"] = page
         inputs["limit"] = MAX_PER_PAGE
 
-        return getRequest("animals", inputs, client, getRequestToken() ?: "",false)
+        return getRequest("animals", inputs, client, false)
     }
 
     override suspend fun getDetailsOfAnimal(animalId: Int): HttpResponse {
         val inputs = HashMap<String, Any>()
         inputs["id"] = animalId
-        return getRequest("animals", inputs, client, getRequestToken() ?: "", isPath = true)
+        return getRequest("animals", inputs, client, isPath = true)
     }
 }

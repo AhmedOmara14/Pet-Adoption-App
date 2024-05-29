@@ -33,7 +33,6 @@ import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.omaradev.pet_adoption.R
-import com.omaradev.pet_adoption.ui.Pet
 import com.omaradev.pet_adoption.ui.home.component.NearByResultListItem
 import com.omaradev.pet_adoption.ui.home.viewmodel.HomeViewModel
 import com.omaradev.pet_adoption.ui.theme.colorBlue
